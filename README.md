@@ -15,9 +15,12 @@ Compare two lists of IP prefixes (added/removed subnets).
 ```
 # cat a.txt
 192.168.0.0/16
+10.0.0.0/9
 2001:db8::/64
+10.128.0.0/9
 
 # cat b.txt
+10.0.0.0/8
 192.168.0.0/17
 192.168.128.0/24
 192.168.129.0/24
