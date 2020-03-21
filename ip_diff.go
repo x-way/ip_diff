@@ -14,11 +14,17 @@ import (
 func readFile(name string) ([]ipaddr.Prefix, []ipaddr.Prefix) {
 	var prefixesv6 []ipaddr.Prefix
 	var prefixesv4 []ipaddr.Prefix
-	f, err := os.Open(name)
-	if err != nil {
-		log.Fatal(err)
+	var f *os.File
+	if name == "-" {
+		f = os.Stdin
+	} else {
+		var err error
+		f, err = os.Open(name)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
 	}
-	defer f.Close()
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -105,11 +111,15 @@ func subtractPrefixes(add []ipaddr.Prefix, sub []ipaddr.Prefix) []ipaddr.Prefix 
 }
 
 func main() {
+	file2 := "-"
+	if len(os.Args) > 2 {
+		file2 = os.Args[2]
+	}
 	aPfx6, aPfx4 := readFile(os.Args[1])
-	bPfx6, bPfx4 := readFile(os.Args[2])
-	fmt.Println("ip_diff " + os.Args[1] + " " + os.Args[2])
+	bPfx6, bPfx4 := readFile(file2)
+	fmt.Println("ip_diff " + os.Args[1] + " " + file2)
 	fmt.Println("--- " + os.Args[1])
-	fmt.Println("+++ " + os.Args[2])
+	fmt.Println("+++ " + file2)
 	for _, prefix := range subtractPrefixes(ipaddr.Aggregate(aPfx6), ipaddr.Aggregate(bPfx6)) {
 		fmt.Println("-" + prefix.String())
 	}
