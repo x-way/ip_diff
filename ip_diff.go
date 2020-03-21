@@ -112,6 +112,10 @@ func subtractPrefixes(add []ipaddr.Prefix, sub []ipaddr.Prefix) []ipaddr.Prefix 
 
 func main() {
 	file2 := "-"
+	if len(os.Args) < 2 || os.Args[1] == "-h" || os.Args[1] == "--help" {
+		fmt.Println("Usage: ip_diff <file_a> [<file_b>]")
+		return
+	}
 	if len(os.Args) > 2 {
 		file2 = os.Args[2]
 	}
