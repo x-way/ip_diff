@@ -56,7 +56,7 @@ func splitPrefix(pfx ipaddr.Prefix) (ipaddr.Prefix, ipaddr.Prefix) {
 	return splits[0], splits[1]
 }
 
-func excludePrefix(a ipaddr.Prefix, b ipaddr.Prefix) ([]ipaddr.Prefix, []ipaddr.Prefix) {
+func excludePrefix(a, b ipaddr.Prefix) ([]ipaddr.Prefix, []ipaddr.Prefix) {
 	if a.Equal(&b) {
 		return []ipaddr.Prefix{}, []ipaddr.Prefix{}
 	}
@@ -82,7 +82,7 @@ func excludePrefix(a ipaddr.Prefix, b ipaddr.Prefix) ([]ipaddr.Prefix, []ipaddr.
 	return low, up
 }
 
-func subtractPrefixes(add []ipaddr.Prefix, sub []ipaddr.Prefix) []ipaddr.Prefix {
+func subtractPrefixes(add, sub []ipaddr.Prefix) []ipaddr.Prefix {
 	var res []ipaddr.Prefix
 	for len(add) > 0 && len(sub) > 0 {
 		ap := add[0]
