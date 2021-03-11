@@ -4,16 +4,14 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"net"
 	"os"
 	"strings"
 
-	"github.com/mikioh/ipaddr"
+	"inet.af/netaddr"
 )
 
-func readFile(name string) ([]ipaddr.Prefix, []ipaddr.Prefix) {
-	var prefixesv6 []ipaddr.Prefix
-	var prefixesv4 []ipaddr.Prefix
+func readFile(name string) []netaddr.IPPrefix {
+	var prefixes []netaddr.IPPrefix
 	var f *os.File
 	if name == "-" {
 		f = os.Stdin
@@ -35,79 +33,16 @@ func readFile(name string) ([]ipaddr.Prefix, []ipaddr.Prefix) {
 				line = line + "/32"
 			}
 		}
-		_, ipNet, err := net.ParseCIDR(line)
+		prefix, err := netaddr.ParseIPPrefix(line)
 		if err != nil {
 			log.Fatal(err)
 		}
-		if strings.Contains(line, ":") {
-			prefixesv6 = append(prefixesv6, *(ipaddr.NewPrefix(ipNet)))
-		} else {
-			prefixesv4 = append(prefixesv4, *(ipaddr.NewPrefix(ipNet)))
-		}
+		prefixes = append(prefixes, prefix)
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-	return prefixesv6, prefixesv4
-}
-
-func splitPrefix(pfx ipaddr.Prefix) (ipaddr.Prefix, ipaddr.Prefix) {
-	splits := pfx.Subnets(1)
-	return splits[0], splits[1]
-}
-
-func excludePrefix(a, b ipaddr.Prefix) ([]ipaddr.Prefix, []ipaddr.Prefix) {
-	if a.Equal(&b) {
-		return []ipaddr.Prefix{}, []ipaddr.Prefix{}
-	}
-	if !a.Contains(&b) {
-		return []ipaddr.Prefix{a}, []ipaddr.Prefix{}
-	}
-	var low, up []ipaddr.Prefix
-	s1, s2 := splitPrefix(a)
-	for !s1.Equal(&b) && !s2.Equal(&b) {
-		if s1.Contains(&b) {
-			up = append([]ipaddr.Prefix{s2}, up...)
-			s1, s2 = splitPrefix(s1)
-		} else {
-			low = append(low, s1)
-			s1, s2 = splitPrefix(s2)
-		}
-	}
-	if s1.Equal(&b) {
-		up = append([]ipaddr.Prefix{s2}, up...)
-	} else {
-		low = append(low, s1)
-	}
-	return low, up
-}
-
-func subtractPrefixes(add, sub []ipaddr.Prefix) []ipaddr.Prefix {
-	var res []ipaddr.Prefix
-	for len(add) > 0 && len(sub) > 0 {
-		ap := add[0]
-		sp := sub[0]
-		if sp.Equal(&ap) || sp.Contains(&ap) {
-			add = add[1:]
-			continue
-		}
-		if ap.Contains(&sp) {
-			add = add[1:]
-			sub = sub[1:]
-			low, up := excludePrefix(ap, sp)
-			res = append(res, low...)
-			add = append(up, add...)
-			continue
-		}
-		if ipaddr.Compare(&ap, &sp) < 0 {
-			add = add[1:]
-			res = append(res, ap)
-			continue
-		}
-		sub = sub[1:]
-	}
-	res = append(res, add...)
-	return res
+	return prefixes
 }
 
 func main() {
@@ -119,21 +54,33 @@ func main() {
 	if len(os.Args) > 2 {
 		file2 = os.Args[2]
 	}
-	aPfx6, aPfx4 := readFile(os.Args[1])
-	bPfx6, bPfx4 := readFile(file2)
+	var aBuilder netaddr.IPSetBuilder
+	var bBuilder netaddr.IPSetBuilder
+	aPrefixes := readFile(os.Args[1])
+	bPrefixes := readFile(file2)
+	for _, prefix := range aPrefixes {
+		aBuilder.AddPrefix(prefix)
+	}
+	aSet := aBuilder.IPSet()
+	for _, prefix := range bPrefixes {
+		bBuilder.AddPrefix(prefix)
+	}
+	bSet := bBuilder.IPSet()
 	fmt.Println("ip_diff " + os.Args[1] + " " + file2)
 	fmt.Println("--- " + os.Args[1])
 	fmt.Println("+++ " + file2)
-	for _, prefix := range subtractPrefixes(ipaddr.Aggregate(aPfx6), ipaddr.Aggregate(bPfx6)) {
+
+	removedBuilder := bBuilder.Clone()
+	removedBuilder.Complement()
+	removedBuilder.Intersect(aSet)
+	for _, prefix := range removedBuilder.IPSet().Prefixes() {
 		fmt.Println("-" + prefix.String())
 	}
-	for _, prefix := range subtractPrefixes(ipaddr.Aggregate(bPfx6), ipaddr.Aggregate(aPfx6)) {
-		fmt.Println("+" + prefix.String())
-	}
-	for _, prefix := range subtractPrefixes(ipaddr.Aggregate(aPfx4), ipaddr.Aggregate(bPfx4)) {
-		fmt.Println("-" + prefix.String())
-	}
-	for _, prefix := range subtractPrefixes(ipaddr.Aggregate(bPfx4), ipaddr.Aggregate(aPfx4)) {
+
+	addedBuilder := aBuilder.Clone()
+	addedBuilder.Complement()
+	addedBuilder.Intersect(bSet)
+	for _, prefix := range addedBuilder.IPSet().Prefixes() {
 		fmt.Println("+" + prefix.String())
 	}
 }
