@@ -1,0 +1,5 @@
+ip_diff test/b.txt test/c.txt
+--- test/b.txt
++++ test/c.txt
+-10.0.0.0/8
++1.2.3.4/32

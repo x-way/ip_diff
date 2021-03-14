@@ -1,0 +1,3 @@
+ip_diff test/e.txt test/e.txt
+--- test/e.txt
++++ test/e.txt
