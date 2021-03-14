@@ -1,0 +1,7 @@
+ip_diff test/c.txt test/d.txt
+--- test/c.txt
++++ test/d.txt
+-1.2.3.4/32
++10.0.0.1/32
++192.168.4.0/22
++2001:db8::123/128
