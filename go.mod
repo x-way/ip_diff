@@ -2,4 +2,4 @@ module github.com/x-way/ip_diff
 
 go 1.14
 
-require inet.af/netaddr v0.0.0-20210403172118-1e1430f727e0
+require inet.af/netaddr v0.0.0-20210414225854-daf4c9bcf1f9
