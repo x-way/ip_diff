@@ -45,6 +45,14 @@ func readFile(name string) []netaddr.IPPrefix {
 	return prefixes
 }
 
+func mustIPSet(b *netaddr.IPSetBuilder) *netaddr.IPSet {
+	s, err := b.IPSet()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return s
+}
+
 func main() {
 	file2 := "-"
 	if len(os.Args) < 2 || os.Args[1] == "-h" || os.Args[1] == "--help" {
@@ -61,11 +69,11 @@ func main() {
 	for _, prefix := range aPrefixes {
 		aBuilder.AddPrefix(prefix)
 	}
-	aSet := aBuilder.IPSet()
+	aSet := mustIPSet(&aBuilder)
 	for _, prefix := range bPrefixes {
 		bBuilder.AddPrefix(prefix)
 	}
-	bSet := bBuilder.IPSet()
+	bSet := mustIPSet(&bBuilder)
 	fmt.Println("ip_diff " + os.Args[1] + " " + file2)
 	fmt.Println("--- " + os.Args[1])
 	fmt.Println("+++ " + file2)
@@ -73,14 +81,14 @@ func main() {
 	removedBuilder := bBuilder.Clone()
 	removedBuilder.Complement()
 	removedBuilder.Intersect(aSet)
-	for _, prefix := range removedBuilder.IPSet().Prefixes() {
+	for _, prefix := range mustIPSet(removedBuilder).Prefixes() {
 		fmt.Println("-" + prefix.String())
 	}
 
 	addedBuilder := aBuilder.Clone()
 	addedBuilder.Complement()
 	addedBuilder.Intersect(bSet)
-	for _, prefix := range addedBuilder.IPSet().Prefixes() {
+	for _, prefix := range mustIPSet(addedBuilder).Prefixes() {
 		fmt.Println("+" + prefix.String())
 	}
 }
