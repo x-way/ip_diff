@@ -7,7 +7,7 @@ Compare two lists of IP prefixes (added/removed subnets).
 ## Installation
 
 ```
-# go get github.com/x-way/ip_diff
+# go install github.com/x-way/ip_diff@latest
 ```
 
 ## Usage
