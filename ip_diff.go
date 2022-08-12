@@ -4,14 +4,15 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"net/netip"
 	"os"
 	"strings"
 
-	"inet.af/netaddr"
+	"go4.org/netipx"
 )
 
-func readFile(name string) []netaddr.IPPrefix {
-	var prefixes []netaddr.IPPrefix
+func readFile(name string) []netip.Prefix {
+	var prefixes []netip.Prefix
 	var f *os.File
 	if name == "-" {
 		f = os.Stdin
@@ -33,7 +34,7 @@ func readFile(name string) []netaddr.IPPrefix {
 				line = line + "/32"
 			}
 		}
-		prefix, err := netaddr.ParseIPPrefix(line)
+		prefix, err := netip.ParsePrefix(line)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -45,7 +46,7 @@ func readFile(name string) []netaddr.IPPrefix {
 	return prefixes
 }
 
-func mustIPSet(b *netaddr.IPSetBuilder) *netaddr.IPSet {
+func mustIPSet(b *netipx.IPSetBuilder) *netipx.IPSet {
 	s, err := b.IPSet()
 	if err != nil {
 		log.Fatal(err)
@@ -62,8 +63,8 @@ func main() {
 	if len(os.Args) > 2 {
 		file2 = os.Args[2]
 	}
-	var aBuilder netaddr.IPSetBuilder
-	var bBuilder netaddr.IPSetBuilder
+	var aBuilder netipx.IPSetBuilder
+	var bBuilder netipx.IPSetBuilder
 	aPrefixes := readFile(os.Args[1])
 	bPrefixes := readFile(file2)
 	for _, prefix := range aPrefixes {
