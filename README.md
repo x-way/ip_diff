@@ -1,6 +1,5 @@
 # ip_diff
 [![CircleCI](https://circleci.com/gh/x-way/ip_diff/tree/master.svg?style=svg)](https://circleci.com/gh/x-way/ip_diff/tree/master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/x-way/ip_diff)](https://goreportcard.com/report/github.com/x-way/ip_diff)
 
 Compare two lists of IP prefixes (added/removed subnets).
 
